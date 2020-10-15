@@ -1,0 +1,35 @@
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using Product.FrontEnd.Models;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Product.FrontEnd.ViewComponent.Shared
+{
+    public partial class InputProductComponent
+    {
+        #region Public Property
+
+        [Parameter]
+        public ProductModel Product { get; set; }
+
+        [Parameter]
+        public EventCallback OnSubmit { get; set; }
+
+        [Inject]
+        public IJSRuntime JSRuntime { get; set; }
+
+        #endregion Public Property
+
+        #region Private Event Handler
+
+        private async Task OnCancel()
+        {
+            await JSRuntime.InvokeVoidAsync(identifier: "onCancel");
+        }
+
+        #endregion Private Event Handler
+    }
+}

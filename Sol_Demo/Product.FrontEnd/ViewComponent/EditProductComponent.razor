@@ -1,0 +1,33 @@
+﻿@inherits EditProductComponentViewModel
+
+@if (base.IsDisplay == true)
+{
+
+    <div class="modal" style="display:block">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h6 class="modal-title">Edit Product</h6>
+                    <button type="button" class="close" @onclick="base.CancelEditDialog">&times;</button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <EditForm Model="base.SelectedProduct" Context="formContext">
+                        <DataAnnotationsValidator />
+
+                        <InputProductComponent Product="base.SelectedProduct" OnSubmit="@(()=> base.OnSubmit(formContext))"></InputProductComponent>
+                    </EditForm>
+
+                    @if (base.ErrorMessage != null)
+                    {
+                        <ErrorMessageComponent ErrorMessage="@base.ErrorMessage"></ErrorMessageComponent>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
