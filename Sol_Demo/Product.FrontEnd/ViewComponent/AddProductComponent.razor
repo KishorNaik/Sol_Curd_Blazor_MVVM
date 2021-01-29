@@ -8,7 +8,7 @@
                 <!-- Modal Header -->
                 <div class="modal-header">
                     <h6 class="modal-title">Add Product</h6>
-                    <button type="button" class="close" @onclick="base.CancelAddDialog">&times;</button>
+                    <button type="button" class="close" @onclick="base.CloseDialogCommand">&times;</button>
                 </div>
 
                 <!-- Modal body -->
@@ -17,7 +17,7 @@
                     <EditForm Model="base.Product" Context="formContext">
                         <DataAnnotationsValidator />
 
-                        <InputProductComponent Product="this.Product" OnSubmit="@(()=> base.OnSubmit(formContext))"></InputProductComponent>
+                        <InputProductComponent Product="this.Product" OnSubmit="@(()=> base.OnSubmitCommand(formContext))"></InputProductComponent>
                     </EditForm>
 
                     @if (this.ErrorMessage != null)

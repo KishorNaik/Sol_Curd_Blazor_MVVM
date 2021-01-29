@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Product.FrontEnd.OpenApi;
 using Product.FrontEnd.Services;
@@ -13,6 +14,8 @@ namespace Product.FrontEnd
         public static void ProductConfigureService(this IServiceCollection services)
         {
             services.AddAutoMapper(typeof(Startup));
+
+            services.AddMediatR(typeof(Startup));
 
             services.AddHttpClient<IProductService, ProductService>((config) =>
             {

@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using MediatR;
+using Microsoft.AspNetCore.Components;
+using Product.FrontEnd.Business.Commands;
+using Product.FrontEnd.Business.Commands.DeleteProducts;
+using Product.FrontEnd.Business.Commands.Shared;
 using Product.FrontEnd.Models;
 using Product.FrontEnd.Services;
 using System;
@@ -10,54 +14,66 @@ namespace Product.FrontEnd.ViewModels
 {
     public abstract class DeleteProductComponentViewModel : ComponentBase
     {
+        #region Constructor
+
+        public DeleteProductComponentViewModel()
+        {
+            this.ShowDeleteDialog = async () => await Mediator.Publish<OnShowDialogCommand<DeleteProductComponentViewModel>>(
+                new OnShowDialogCommand<DeleteProductComponentViewModel>()
+                {
+                    OnInvokeAction = (onShowAction) =>
+                    {
+                        base.InvokeAsync(() =>
+                        {
+                            onShowAction.Invoke(this, () => base.StateHasChanged());
+                        });
+                    }
+                });
+
+            this.CloseDialogCommand = async () => await Mediator.Publish<OnCloselDialogCommand<DeleteProductComponentViewModel>>(new OnCloselDialogCommand<DeleteProductComponentViewModel>()
+            {
+                OnInvokeAction = (onCloseAction) =>
+                {
+                    base.InvokeAsync(() =>
+                    {
+                        onCloseAction.Invoke(this, () => base.StateHasChanged());
+                    });
+                }
+            });
+
+            this.YesCommand = async () => await Mediator.Publish<OnDeleteYesCommand>(new OnDeleteYesCommand()
+            {
+                ViewModel = this,
+                OnStateHasChanged = () => base.StateHasChanged()
+            });
+        }
+
+        #endregion Constructor
+
         #region Public Property
 
         [Parameter]
         public ProductModel SelectedProduct { get; set; }
 
         [Inject]
-        public IProductService ProductServiceObj { get; set; }
+        public IMediator Mediator { get; set; }
 
         [Parameter]
         public EventCallback RefreshEvent { get; set; }
+
+        public Action ShowDeleteDialog { get; set; }
 
         #endregion Public Property
 
         #region Protected Property
 
-        protected bool IsDisplay { get; set; }
+        protected internal bool IsDisplay { get; set; }
+
+        protected Action CloseDialogCommand { get; set; }
+
+        protected Action YesCommand { get; set; }
 
         #endregion Protected Property
-
-        #region Private Method
-
-        private async Task<bool> DeleteProductApiCall()
-        {
-            return await this.ProductServiceObj?.DeleteProductApiAsync(this.SelectedProduct);
-        }
-
-        #endregion Private Method
-
-        #region Protected Event Handler
-
-        protected void OnCancelDeleteDialog()
-        {
-            IsDisplay = false;
-            base.StateHasChanged();
-            this.RefreshEvent.InvokeAsync("Refresh Event");
-        }
-
-        protected async Task OnYes()
-        {
-            var apiResponse = await this.DeleteProductApiCall();
-
-            if (apiResponse == true)
-            {
-                this.IsDisplay = false;
-                base.StateHasChanged();
-                await this.RefreshEvent.InvokeAsync("Refresh Event");
-            }
-        }
 
         protected override void OnAfterRender(bool firstRender)
         {
@@ -66,17 +82,5 @@ namespace Product.FrontEnd.ViewModels
                 base.StateHasChanged();
             }
         }
-
-        #endregion Protected Event Handler
-
-        #region Public Method
-
-        public void ShowDeleteDialog()
-        {
-            IsDisplay = true;
-            base.StateHasChanged();
-        }
-
-        #endregion Public Method
     }
 }

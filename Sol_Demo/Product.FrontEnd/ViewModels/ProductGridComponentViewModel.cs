@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using MediatR;
+using Microsoft.AspNetCore.Components;
+using Product.FrontEnd.Business.Commands.ProductGrid;
 using Product.FrontEnd.Models;
-using Product.FrontEnd.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,102 +12,98 @@ namespace Product.FrontEnd.ViewModels
 {
     public abstract class ProductGridComponentViewModel : ComponentBase
     {
+        #region Constructor
+
+        public ProductGridComponentViewModel()
+        {
+            this.ShowAddProductDialogCommand = () => AddProductVM.ShowAddDialog.Invoke();
+
+            this.RefreshStateCommand = async () =>
+              {
+                  await Mediator.Publish<OnGetProductDataCommand>(new OnGetProductDataCommand()
+                  {
+                      ViewModel = this
+                  });
+
+                  base.StateHasChanged();
+              };
+
+            this.OnEditCommand = async (getGuId) =>
+            {
+                await Mediator.Publish<OnEditProductCommand>(new OnEditProductCommand()
+                {
+                    GetGuid = getGuId,
+                    ViewModel = this,
+                    OnStateHasChanged = () => base.StateHasChanged()
+                });
+            };
+
+            this.OnDeleteCommand = async (getGuId) =>
+              {
+                  await Mediator.Publish<OnDeleteProductCommand>(new OnDeleteProductCommand()
+                  {
+                      GetGuid = getGuId,
+                      ViewModel = this,
+                      OnStateHasChanged = () => base.StateHasChanged()
+                  });
+              };
+        }
+
+        #endregion Constructor
+
         #region Public  Property
 
         [Inject]
-        public IProductService ProductServiceObj { get; set; }
+        public IMediator Mediator { get; set; }
 
         #endregion Public  Property
 
         #region Protected Property
 
-        protected bool IsLoad { get; set; }
+        protected internal bool IsLoad { get; set; }
 
-        protected List<ProductModel> ListProducts { get; set; }
+        protected internal List<ProductModel> ListProducts { get; set; }
 
         protected AddProductComponentViewModel AddProductVM { get; set; }
 
-        protected EditProductComponentViewModel EditProductVM { get; set; }
+        protected internal EditProductComponentViewModel EditProductVM { get; set; }
 
-        protected DeleteProductComponentViewModel DeleteProductVM { get; set; }
+        protected internal DeleteProductComponentViewModel DeleteProductVM { get; set; }
 
-        protected ProductModel SelectedProduct { get; set; }
+        protected internal ProductModel SelectedProduct { get; set; }
 
-        protected String ErrorMessage { get; set; }
+        protected internal String ErrorMessage { get; set; }
+
+        protected Action ShowAddProductDialogCommand { get; set; }
+
+        protected Action RefreshStateCommand { get; set; }
+
+        protected Action<Guid> OnEditCommand { get; set; }
+
+        protected Action<Guid> OnDeleteCommand { get; set; }
 
         #endregion Protected Property
 
-        #region Private Method
 
-        private async Task GetProductDataAsync()
-        {
-            try
-            {
-                ListProducts = (await ProductServiceObj?.GetProductsAsync()).ToList();
-
-                if (ListProducts == null || ListProducts?.Count == 0)
-                {
-                    ErrorMessage = "No Record Found";
-                }
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        private ProductModel FilterProduct(Guid guid)
-        {
-            return ListProducts
-                                ?.FirstOrDefault((productModel) => productModel.ProductIdentity == guid);
-        }
-
-        #endregion Private Method
-
-        #region Protected Event Handler
-
-        protected async Task RefreshState()
-        {
-            await GetProductDataAsync();
-
-            base.StateHasChanged();
-        }
-
-        protected void OnAdd()
-        {
-            AddProductVM.ShowAddDialog();
-        }
-
-        protected void OnEdit(Guid guid)
-        {
-            this.SelectedProduct = this.FilterProduct(guid);
-            base.StateHasChanged();
-
-            EditProductVM.ShowEditDialog();
-        }
-
-        protected void OnDelete(Guid guid)
-        {
-            this.SelectedProduct = this.FilterProduct(guid);
-            base.StateHasChanged();
-
-            DeleteProductVM.ShowDeleteDialog();
-        }
 
         protected async override Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
-                await Task.Delay(1000);
+                //await Task.Delay(1000);
 
-                await this.GetProductDataAsync();
+                ////await this.GetProductDataAsync();
 
-                IsLoad = true;
+                //IsLoad = true;
 
-                base.StateHasChanged();
+                //base.StateHasChanged();
+
+                await Mediator.Publish<OnLoadProductRenderCommand>(new OnLoadProductRenderCommand()
+                {
+                    ViewModel = this,
+                    OnStateHasChanged = () => base.StateHasChanged()
+                });
             }
         }
-
-        #endregion Protected Event Handler
     }
 }

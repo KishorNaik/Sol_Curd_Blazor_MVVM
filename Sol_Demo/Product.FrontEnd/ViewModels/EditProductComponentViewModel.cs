@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Product.FrontEnd.Business.Commands;
+using Product.FrontEnd.Business.Commands.EditProducts;
+using Product.FrontEnd.Business.Commands.Shared;
 using Product.FrontEnd.Models;
 using Product.FrontEnd.Services;
 using System;
@@ -11,6 +15,42 @@ namespace Product.FrontEnd.ViewModels
 {
     public abstract class EditProductComponentViewModel : ComponentBase
     {
+        #region Constructor
+
+        public EditProductComponentViewModel()
+        {
+            this.ShowEditDialog = async () => await Mediator.Publish<OnShowDialogCommand<EditProductComponentViewModel>>(new OnShowDialogCommand<EditProductComponentViewModel>()
+            {
+                OnInvokeAction = (onShowAction) =>
+                {
+                    base.InvokeAsync(() =>
+                    {
+                        onShowAction.Invoke(this, () => base.StateHasChanged());
+                    });
+                }
+            });
+
+            this.CloseDialogCommand = async () => await Mediator.Publish<OnCloselDialogCommand<EditProductComponentViewModel>>(new OnCloselDialogCommand<EditProductComponentViewModel>()
+            {
+                OnInvokeAction = (onCloseAction) =>
+                {
+                    base.InvokeAsync(() =>
+                    {
+                        onCloseAction?.Invoke(this, () => base.StateHasChanged());
+                    });
+                }
+            });
+
+            this.OnEditSubmitCommand = async (editContext) => await Mediator.Publish<OnEditProductSubmitCommand>(new OnEditProductSubmitCommand()
+            {
+                Edit = editContext,
+                ViewModel = this,
+                OnStateHasChanged = () => base.StateHasChanged()
+            }); ;
+        }
+
+        #endregion Constructor
+
         #region Public Property
 
         [Parameter]
@@ -19,66 +59,27 @@ namespace Product.FrontEnd.ViewModels
         [Parameter]
         public EventCallback RefreshEvent { get; set; }
 
+        //[Inject]
+        //public IProductService ProductServiceObj { get; set; }
+
         [Inject]
-        public IProductService ProductServiceObj { get; set; }
+        public IMediator Mediator { get; set; }
+
+        public Action ShowEditDialog { get; set; }
 
         #endregion Public Property
 
         #region Protected Property
 
-        protected bool IsDisplay { get; set; }
+        protected internal bool IsDisplay { get; set; }
 
-        protected String ErrorMessage { get; set; }
+        protected internal String ErrorMessage { get; set; }
+
+        protected internal Action CloseDialogCommand { get; set; }
+
+        protected Action<EditContext> OnEditSubmitCommand { get; set; }
 
         #endregion Protected Property
-
-        #region Private Method
-
-        private async Task<bool> EditUpdateApiCall()
-        {
-            return await this.ProductServiceObj?.UpdateProductApiAsync(this.SelectedProduct);
-        }
-
-        #endregion Private Method
-
-        #region Public Method
-
-        public void ShowEditDialog()
-        {
-            IsDisplay = true;
-            base.StateHasChanged();
-        }
-
-        #endregion Public Method
-
-        #region Protected Event Handler
-
-        protected void CancelEditDialog()
-        {
-            IsDisplay = false;
-            base.StateHasChanged();
-            RefreshEvent.InvokeAsync("Refresh");
-        }
-
-        protected async Task OnSubmit(EditContext editContext)
-        {
-            var flag = editContext?.Validate();
-            if (flag == false) return;
-
-            var apiResponse = await this.EditUpdateApiCall();
-
-            if (apiResponse == true)
-            {
-                IsDisplay = false;
-                base.StateHasChanged();
-                await this.RefreshEvent.InvokeAsync("Refresh Event");
-            }
-            else
-            {
-                ErrorMessage = $"{SelectedProduct.ProductName} product already exists in database";
-                base.StateHasChanged();
-            }
-        }
 
         protected override void OnAfterRender(bool firstRender)
         {
@@ -87,7 +88,5 @@ namespace Product.FrontEnd.ViewModels
                 base.StateHasChanged();
             }
         }
-
-        #endregion Protected Event Handler
     }
 }

@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Product.FrontEnd.Business.Commands;
+using Product.FrontEnd.Business.Commands.AddProducts;
+using Product.FrontEnd.Business.Commands.Shared;
 using Product.FrontEnd.Models;
 using Product.FrontEnd.Services;
 using System;
@@ -16,6 +20,46 @@ namespace Product.FrontEnd.ViewModels
         public AddProductComponentViewModel()
         {
             Product = new ProductModel();
+            this.CloseDialogCommand = async () => await Mediator.Publish<OnCloselDialogCommand<AddProductComponentViewModel>>(new OnCloselDialogCommand<AddProductComponentViewModel>()
+            {
+                //ViewModel = this,
+                //OnStateHasChanged = () => base.StateHasChanged(),
+                //OnBaseInvoke = (self) =>
+                //{
+                //    base.InvokeAsync(() =>
+                //    {
+                //        self.Invoke();
+                //    });
+                //},
+                OnInvokeAction = (onCancelAction) =>
+                {
+                    base.InvokeAsync(() =>
+                    {
+                        onCancelAction.Invoke(this, () => base.StateHasChanged());
+                    });
+                }
+            });
+
+            this.ShowAddDialog = async () => await Mediator.Publish<OnShowDialogCommand<AddProductComponentViewModel>>(new OnShowDialogCommand<AddProductComponentViewModel>()
+            {
+                OnInvokeAction = (onShowAction) =>
+                {
+                    base.InvokeAsync(() =>
+                    {
+                        onShowAction.Invoke(this, () => base.StateHasChanged());
+                    });
+                }
+            });
+
+            this.OnSubmitCommand = async (editContext) =>
+            {
+                await this.Mediator.Publish<OnAddProductSubmitCommand>(new OnAddProductSubmitCommand()
+                {
+                    Edit = editContext,
+                    ViewModel = this,
+                    OnStateHasChanged = () => base.StateHasChanged()
+                });
+            };
         }
 
         #endregion Constructor
@@ -26,71 +70,24 @@ namespace Product.FrontEnd.ViewModels
         public EventCallback RefreshEvent { get; set; }
 
         [Inject]
-        public IProductService ProductServiceObj { get; set; }
+        public IMediator Mediator { get; set; }
+
+        public Action ShowAddDialog { get; set; }
 
         #endregion Public Property
 
         #region Protected Property
 
-        protected bool IsDisplay { get; set; }
+        protected internal bool IsDisplay { get; set; }
 
-        protected String ErrorMessage { get; set; }
+        protected internal String ErrorMessage { get; set; }
 
-        protected ProductModel Product { get; set; }
+        protected internal ProductModel Product { get; set; }
+
+        protected Action CloseDialogCommand { get; set; }
+
+        protected Action<EditContext> OnSubmitCommand { get; set; }
 
         #endregion Protected Property
-
-        #region Private Method
-
-        private async Task<bool> AddProductApiCall()
-        {
-            return await ProductServiceObj.AddProductApiAsync(this.Product);
-        }
-
-        #endregion Private Method
-
-        #region Protected Event Handler
-
-        protected void CancelAddDialog()
-        {
-            IsDisplay = false;
-            Product = null;
-            base.StateHasChanged();
-            this.RefreshEvent.InvokeAsync("Refresh Event");
-        }
-
-        protected async Task OnSubmit(EditContext editContext)
-        {
-            var flag = editContext?.Validate();
-            if (flag == false) return;
-
-            var apiResponse = await this.AddProductApiCall();
-
-            if (apiResponse == true)
-            {
-                IsDisplay = false;
-                Product = null;
-                base.StateHasChanged();
-                await this.RefreshEvent.InvokeAsync("Refresh Event");
-            }
-            else
-            {
-                ErrorMessage = $"{Product.ProductName} product already exists in database";
-                base.StateHasChanged();
-            }
-        }
-
-        #endregion Protected Event Handler
-
-        #region Public Method
-
-        public void ShowAddDialog()
-        {
-            IsDisplay = true;
-            Product = Product ?? new ProductModel();
-            base.StateHasChanged();
-        }
-
-        #endregion Public Method
     }
 }

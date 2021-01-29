@@ -9,7 +9,7 @@
                 <!-- Modal Header -->
                 <div class="modal-header">
                     <h6 class="modal-title">Delete Product</h6>
-                    <button type="button" class="close" @onclick="base.OnCancelDeleteDialog">&times;</button>
+                    <button type="button" class="close" @onclick="base.CloseDialogCommand">&times;</button>
                 </div>
 
                 <!-- Modal body -->
@@ -28,8 +28,8 @@
                             </div>
                         </div>
                         <div class="col-sm-12">
-                            <button class="btn btn-dark" @onclick="base.OnYes">Yes</button>
-                            <button class="btn btn-dark" @onclick="base.OnCancelDeleteDialog">No</button>
+                            <button class="btn btn-dark" @onclick="base.YesCommand">Yes</button>
+                            <button class="btn btn-dark" @onclick="base.CloseDialogCommand">No</button>
                         </div>
                     </div>
                 </div>

@@ -5,7 +5,7 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-12">
-            <button class="btn btn-danger" @onclick="base.OnAdd">Add Product</button>
+            <button class="btn btn-danger" @onclick="base.ShowAddProductDialogCommand">Add Product</button>
         </div>
     </div>
     <div class="row mt-3">
@@ -32,10 +32,10 @@
                                         <td>@productModel.ProductName</td>
                                         <td>@productModel.UnitPrice</td>
                                         <td>
-                                            <button class="btn btn-danger" @onclick="@(()=> base.OnEdit(productModel.ProductIdentity))">Edit</button>
+                                            <button class="btn btn-danger" @onclick="@(()=> base.OnEditCommand(productModel.ProductIdentity))">Edit</button>
                                         </td>
                                         <td>
-                                            <a class="btn btn-danger" @onclick="@(()=> base.OnDelete(productModel.ProductIdentity))">Delete</a>
+                                            <a class="btn btn-danger" @onclick="@(()=> base.OnDeleteCommand(productModel.ProductIdentity))">Delete</a>
                                         </td>
                                     </tr>
 
@@ -55,9 +55,9 @@
                 <div>Loading...</div>
             }
 
-            <AddProductComponent @ref="base.AddProductVM" RefreshEvent="base.RefreshState"></AddProductComponent>
-            <EditProductComponent @ref="base.EditProductVM" SelectedProduct="base.SelectedProduct" RefreshEvent="base.RefreshState"></EditProductComponent>
-            <DeleteProductComponent @ref="base.DeleteProductVM" SelectedProduct="base.SelectedProduct" RefreshEvent="base.RefreshState"></DeleteProductComponent>
+            <AddProductComponent @ref="base.AddProductVM" RefreshEvent="base.RefreshStateCommand"></AddProductComponent>
+            <EditProductComponent @ref="base.EditProductVM" SelectedProduct="base.SelectedProduct" RefreshEvent="base.RefreshStateCommand"></EditProductComponent>
+            <DeleteProductComponent @ref="base.DeleteProductVM" SelectedProduct="base.SelectedProduct" RefreshEvent="base.RefreshStateCommand"></DeleteProductComponent>
         </div>
     </div>
 </div>
